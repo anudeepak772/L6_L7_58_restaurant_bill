@@ -1,27 +1,53 @@
 def clean_dish_name(name):
     """
     Removes the chef's-special markers (*, #, ~) and title-cases the name.
-    Assumes name is a non-empty string.
+    Safely handles None or non-string inputs.
     """
+    if not isinstance(name, str):
+        return ""
     name = name.strip()
     for ch in ['*', '#', '~']:
         name = name.replace(ch, '')
-    return name.title()
+    return name.strip().title()
+
 
 def parse_item_prices(text):
     """
     Parses comma-separated prices into a list of ints.
-    Assumes every price is a whole number.
+    Ignores invalid/non-numeric tokens and safely handles None or empty input.
     """
-    return [int(price) for price in text.split(',')]
+    if not isinstance(text, str) or not text.strip():
+        return []
+    prices = []
+    for item in text.split(','):
+        cleaned = item.strip()
+        if cleaned:
+            try:
+                prices.append(int(cleaned))
+            except ValueError:
+                continue
+    return prices
+
 
 def split_amount(text):
     """
     Splits 'TOTAL/PEOPLE' into the amount each person pays.
-    Assumes both values are whole numbers and people is not zero.
+    Safely returns 0 on invalid formats, non-integers, or division by zero.
     """
-    total, people = text.split('/')
-    return int(total) // int(people)
+    if not isinstance(text, str) or '/' not in text:
+        return 0
+    parts = text.split('/')
+    if len(parts) != 2:
+        return 0
+    try:
+        total = int(parts[0].strip())
+        people = int(parts[1].strip())
+        if people <= 0:
+            return 0
+        return total // people
+    except ValueError:
+        return 0
+
 
 def main():
     print("==== Running clean_dish_name ====")
@@ -35,6 +61,7 @@ def main():
     print("\n==== Running split_amount ====")
     value = input("Enter the bill and number of people as TOTAL/PEOPLE (e.g. 1200/4): ")
     print("Each person pays:", split_amount(value))
+
 
 if __name__ == "__main__":
     main()
